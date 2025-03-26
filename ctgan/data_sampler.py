@@ -6,8 +6,10 @@ import numpy as np
 class DataSampler(object):
     """DataSampler samples the conditional vector and corresponding data for CTGAN."""
 
-    def __init__(self, data, output_info, log_frequency):
+    def __init__(self, data, output_info, log_frequency, protected_columns=None):
         self._data_length = len(data)
+        # New attribute to store protected column names (DS)
+        self._protected_columns = protected_columns
 
         def is_discrete_column(column_info):
             return len(column_info) == 1 and column_info[0].activation_fn == 'softmax'

@@ -160,6 +160,8 @@ class CTGAN(BaseSynthesizer):
         epochs=300,
         pac=10,
         cuda=True,
+        # New parameter for protected attributes
+        protected_columns=None
     ):
         assert batch_size % 2 == 0
 
@@ -178,6 +180,8 @@ class CTGAN(BaseSynthesizer):
         self._verbose = verbose
         self._epochs = epochs
         self.pac = pac
+        # Store protected columns
+        self._protected_columns = protected_columns
 
         if not cuda or not torch.cuda.is_available():
             device = 'cpu'
