@@ -97,7 +97,7 @@ class Generator(Module):
         return data
 
 
-class CTGAN(BaseSynthesizer):
+class CTGANFair(BaseSynthesizer):
     """Conditional Table GAN Synthesizer.
 
     This is the core class of the CTGAN project, where the different components
