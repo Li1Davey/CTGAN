@@ -6,10 +6,13 @@ import numpy as np
 class DataSampler(object):
     """DataSampler samples the conditional vector and corresponding data for CTGAN."""
 
-    def __init__(self, data, output_info, log_frequency, protected_columns=None):
+    def __init__(self, data, output_info, log_frequency, protected_columns=None, candidates=5):
         self._data_length = len(data)
-        # New attribute to store protected column names (DS)
-        self._protected_columns = protected_columns
+        # New attribute to store protected columns names (DS)
+        self.protected_columns = protected_columns
+        # New attribute to store the number of candidate solutions to generate for fair sampling (DS)
+        # Default of 5 is the same as in the fairdo package (DS)
+        self.candidates = candidates
 
         def is_discrete_column(column_info):
             return len(column_info) == 1 and column_info[0].activation_fn == 'softmax'
@@ -75,10 +78,31 @@ class DataSampler(object):
             else:
                 st += sum([span_info.dim for span_info in column_info])
 
+    # Uniform selection to Fair selection (DS)
     def _random_choice_prob_index(self, discrete_column_id):
         probs = self._discrete_column_category_prob[discrete_column_id]
-        r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
-        return (probs.cumsum(axis=1) > r).argmax(axis=1)
+        # Get the number of samples (batch_size) and the number of possible categories (num_categories).
+        batch_size, num_categories = probs.shape
+        if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
+            r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
+            return (probs.cumsum(axis=1) > r).argmax(axis=1)
+        else: 
+            candidate_list = []
+            fairness_values = []
+            for i in range(self.candidates):
+                r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
+                candidate = (probs.cumsum(axis=1) > r).argmax(axis=1)
+                candidate_list.append(candidate)
+
+                observed_treatment = np.bincount(candidate, minlength=num_categories)
+                ideal_treatment = np.full(num_categories, batch_size / num_categories)
+                disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
+                fairness_values.append(disparity)
+                
+                candidate_indices = np.where(fairness_values == np.min(fairness_values))[0]
+                best_candidate_index = candidate_indices[0]
+                
+            return best_candidate_index
 
     def sample_condvec(self, batch):
         """Generate the conditional vector for training.

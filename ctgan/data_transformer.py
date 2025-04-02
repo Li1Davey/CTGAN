@@ -7,9 +7,6 @@ import pandas as pd
 from joblib import Parallel, delayed
 from rdt.transformers import ClusterBasedNormalizer, OneHotEncoder
 
-# Import fairdo's Repair (DS)
-from fairdo.preprocessors import Repair
-
 SpanInfo = namedtuple('SpanInfo', ['dim', 'activation_fn'])
 ColumnTransformInfo = namedtuple(
     'ColumnTransformInfo',
@@ -96,16 +93,6 @@ class DataTransformer(object):
 
         This step also counts the #columns in matrix data and span information.
         """
-
-        # If protected columns are specified, repair them using fairdo (DS)
-        if protected_columns is not None:
-            from fairdo.preprocessors import Repair
-            repairer = Repair(method='disparate_impact')
-            # Assuming protected_columns is a list of column names in a DataFrame
-            if isinstance(raw_data, pd.DataFrame):
-                raw_data[protected_columns] = repairer.fit_transform(raw_data[protected_columns], raw_data[protected_columns])
-            else:
-                raise TypeError("Protected columns processing requires raw_data as a pandas DataFrame.")
 
         self.output_info_list = []
         self.output_dimensions = 0

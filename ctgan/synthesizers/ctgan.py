@@ -160,8 +160,8 @@ class CTGAN(BaseSynthesizer):
         epochs=300,
         pac=10,
         cuda=True,
-        # New parameter for protected attributes
-        protected_columns=None
+        # New parameter for protected attributes (DS)
+        protected_attributes=None
     ):
         assert batch_size % 2 == 0
 
@@ -180,8 +180,8 @@ class CTGAN(BaseSynthesizer):
         self._verbose = verbose
         self._epochs = epochs
         self.pac = pac
-        # Store protected columns
-        self._protected_columns = protected_columns
+        # Store protected attributes (DS)
+        self._protected_attributes = protected_attributes
 
         if not cuda or not torch.cuda.is_available():
             device = 'cpu'
@@ -350,9 +350,20 @@ class CTGAN(BaseSynthesizer):
         self._transformer.fit(train_data, discrete_columns)
 
         train_data = self._transformer.transform(train_data)
+        
+        # If protected attributes are provided as names, map them to discrete column indices (DS)
+        protected_columns = None
+        if self._protected_attributes is not None:
+            # Here it is assumed that the order in the `discrete_columns` list corresponds to the transformer output order.
+            protected_columns = set()
+            for attr in self._protected_attributes:
+                if attr in discrete_columns:
+                    idx = discrete_columns.index(attr)
+                    protected_columns.add(idx)
 
         self._data_sampler = DataSampler(
-            train_data, self._transformer.output_info_list, self._log_frequency
+            # Pass protected columns to DataSampler (DS)
+            train_data, self._transformer.output_info_list, self._log_frequency, protected_columns=protected_columns
         )
 
         data_dim = self._transformer.output_dimensions
