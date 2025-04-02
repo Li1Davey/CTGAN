@@ -83,26 +83,38 @@ class DataSampler(object):
         probs = self._discrete_column_category_prob[discrete_column_id]
         # Get the number of samples (batch_size) and the number of possible categories (num_categories).
         batch_size, num_categories = probs.shape
+        
+        # If this column is not marked as protected, use the standard sampling method
         if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
             r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
+        # If the column is protected, we want to find fair candidates
         else: 
             candidate_list = []
             fairness_values = []
+            # Loop to generate a set number of candidate solutions
             for i in range(self.candidates):
+                # Generate a candidate selection for the entire batch using the cumulative-sum sampling method
                 r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
                 candidate = (probs.cumsum(axis=1) > r).argmax(axis=1)
                 candidate_list.append(candidate)
 
+                # Computes the observed frequency of each category for this candidate
                 observed_treatment = np.bincount(candidate, minlength=num_categories)
+                # Create the ideal (fair) frequency distribution
                 ideal_treatment = np.full(num_categories, batch_size / num_categories)
+                # Calculate the disparity (fairness score) as the sum of absolute differences between observed and ideal frequencies
+                # A lower disparity means the candidate is closer to a fair, balanced distribution
                 disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
                 fairness_values.append(disparity)
                 
+                # Find the candidate(s) with the minimum disparity.
                 candidate_indices = np.where(fairness_values == np.min(fairness_values))[0]
+                # Choose the first candidate among those with the minimum disparity.
                 best_candidate_index = candidate_indices[0]
                 
-            return best_candidate_index
+            # Return the candidate with the lowest disparity 
+            return candidate_list[best_candidate_index]
 
     def sample_condvec(self, batch):
         """Generate the conditional vector for training.
