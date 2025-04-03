@@ -80,11 +80,12 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _random_choice_prob_index(self, discrete_column_id):
-        # Convert discrete_column_id to a scalar if it is an array
+        # If discrete_column_id is a 1D array, convert it to a scalar (it should be uniform across the batch).
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
-
+        
         # Retrieve the probability distribution for this discrete column.
+        # "probs" is expected to be a 2D array with shape (batch_size, num_categories).
         probs = self._discrete_column_category_prob[discrete_column_id]
         
         # If the probability array is one-dimensional (i.e., only one row), replicate it for the batch.
@@ -93,38 +94,36 @@ class DataSampler(object):
         
         # Now, get the shape: batch_size and the number of categories.
         batch_size, num_categories = probs.shape
-        
-        # If this column is not marked as protected, use the standard sampling method
+
+        # If this column is not protected, use the standard cumulative-sum sampling method.
         if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
-            r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
+            r = np.expand_dims(np.random.rand(batch_size), axis=1)
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
-        # If the column is protected, we want to find fair candidates
-        else: 
-            candidate_list = []
-            fairness_values = []
-            # Loop to generate a set number of candidate solutions
+        else:
+            # For protected attributes, generate multiple candidate selections and choose the fairest one.
+            candidate_list = []      # List to store candidate selections (each is an array of indices)
+            fairness_values = []     # List to store the fairness (disparity) score for each candidate
+
+            # Generate a number of candidate solutions defined by self.candidates.
             for i in range(self.candidates):
-                # Generate a candidate selection for the entire batch using the cumulative-sum sampling method
-                r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
+                # For each candidate, generate a candidate selection for each sample.
+                r = np.expand_dims(np.random.rand(batch_size), axis=1)
                 candidate = (probs.cumsum(axis=1) > r).argmax(axis=1)
                 candidate_list.append(candidate)
 
-                # Computes the observed frequency of each category for this candidate
+                # Compute observed frequency (observed_treatment) for the candidate.
                 observed_treatment = np.bincount(candidate, minlength=num_categories)
-                # Create the ideal (fair) frequency distribution
+                # Define the ideal (uniform) frequency distribution.
                 ideal_treatment = np.full(num_categories, batch_size / num_categories)
-                # Calculate the disparity (fairness score) as the sum of absolute differences between observed and ideal frequencies
-                # A lower disparity means the candidate is closer to a fair, balanced distribution
+                # Calculate disparity as the sum of absolute differences between observed and ideal distributions.
                 disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
                 fairness_values.append(disparity)
-                
-            # Convert the fairness scores to a numpy array for easier processing.
+
             fairness_values = np.array(fairness_values)
-            # Find the candidate(s) with the minimum disparity.
-            candidate_indices = np.where(fairness_values == np.min(fairness_values))[0]
-            # Choose the first candidate among those with the minimum disparity.
+            # Find candidate(s) with the minimum disparity (i.e., the fairest candidate).
+            candidate_indices = np.where(fairness_values == fairness_values.min())[0]
+            # In case of ties, choose the first candidate.
             best_candidate_index = candidate_indices[0]
-            # Return the candidate with the lowest disparity 
             return candidate_list[best_candidate_index]
 
     def sample_condvec(self, batch):
