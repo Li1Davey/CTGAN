@@ -82,7 +82,11 @@ class DataSampler(object):
     def _random_choice_prob_index(self, discrete_column_id):
         # If discrete_column_id is a 1D numpy array and all values are the same, convert it to a single integer. 
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
-            if np.all(discrete_column_id == discrete_column_id[0]):
+            if not np.all(discrete_column_id == discrete_column_id[0]):
+                # Compute the mode: the unique value that appears most frequently
+                unique_vals, counts = np.unique(discrete_column_id, return_counts=True)
+                discrete_column_id = int(unique_vals[np.argmax(counts)])
+            else:
                 discrete_column_id = int(discrete_column_id[0])
         
         probs = self._discrete_column_category_prob[discrete_column_id]
