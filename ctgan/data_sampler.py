@@ -80,17 +80,27 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _random_choice_prob_index(self, discrete_column_id):
-        # If discrete_column_id is a 1D numpy array and all values are the same, convert it to a single integer. 
+        # Save the original batch size if discrete_column_id is an array.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
+            original_batch_size = len(discrete_column_id)
+            # If the array values are not all the same, choose the most common (mode)
             if not np.all(discrete_column_id == discrete_column_id[0]):
-                # Compute the mode: the unique value that appears most frequently
                 unique_vals, counts = np.unique(discrete_column_id, return_counts=True)
                 discrete_column_id = int(unique_vals[np.argmax(counts)])
             else:
                 discrete_column_id = int(discrete_column_id[0])
-        
+        else:
+            # If discrete_column_id is already a scalar, assume batch size is stored in self._batch_size.
+            original_batch_size = self._batch_size if hasattr(self, '_batch_size') else 1
+
+        # Retrieve the probability distribution for the chosen discrete column.
+        # In the standard CTGAN code, this is expected to be a 2D array with shape (batch_size, num_categories).
         probs = self._discrete_column_category_prob[discrete_column_id]
-        # Get the number of samples (batch_size) and the number of possible categories (num_categories).
+        
+        # If the probability vector is one-dimensional (i.e. only one row), replicate it to match the batch size.
+        if probs.ndim == 1:
+            probs = np.tile(probs, (original_batch_size, 1))
+        # Now, update batch_size and num_categories from the shape of probs.
         batch_size, num_categories = probs.shape
         
         # If this column is not marked as protected, use the standard sampling method
