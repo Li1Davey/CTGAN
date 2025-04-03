@@ -80,6 +80,11 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _random_choice_prob_index(self, discrete_column_id):
+        # If discrete_column_id is a 1D numpy array and all values are the same, convert it to a single integer. 
+        if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
+            if np.all(discrete_column_id == discrete_column_id[0]):
+                discrete_column_id = int(discrete_column_id[0])
+        
         probs = self._discrete_column_category_prob[discrete_column_id]
         # Get the number of samples (batch_size) and the number of possible categories (num_categories).
         batch_size, num_categories = probs.shape
@@ -108,11 +113,12 @@ class DataSampler(object):
                 disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
                 fairness_values.append(disparity)
                 
-                # Find the candidate(s) with the minimum disparity.
-                candidate_indices = np.where(fairness_values == np.min(fairness_values))[0]
-                # Choose the first candidate among those with the minimum disparity.
-                best_candidate_index = candidate_indices[0]
-                
+            # Convert the fairness scores to a numpy array for easier processing.
+            fairness_values = np.array(fairness_values)
+            # Find the candidate(s) with the minimum disparity.
+            candidate_indices = np.where(fairness_values == np.min(fairness_values))[0]
+            # Choose the first candidate among those with the minimum disparity.
+            best_candidate_index = candidate_indices[0]
             # Return the candidate with the lowest disparity 
             return candidate_list[best_candidate_index]
 
