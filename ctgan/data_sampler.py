@@ -84,17 +84,14 @@ class DataSampler(object):
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
 
-        # Retrieve the probability distribution for the chosen discrete column.
+        # Retrieve the probability distribution for this discrete column.
         probs = self._discrete_column_category_prob[discrete_column_id]
         
-        # If probs is one-dimensional, replicate it for the entire batch.
+        # If the probability array is one-dimensional (i.e., only one row), replicate it for the batch.
         if probs.ndim == 1:
-            batch_size = self._batch_size  # use the stored batch size
             probs = np.tile(probs, (batch_size, 1))
-        else:
-            batch_size, num_categories = probs.shape
-
-        # Update batch_size and num_categories from the shape of probs.
+        
+        # Now, get the shape: batch_size and the number of categories.
         batch_size, num_categories = probs.shape
         
         # If this column is not marked as protected, use the standard sampling method
