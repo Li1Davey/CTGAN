@@ -85,7 +85,6 @@ class DataSampler(object):
             discrete_column_id = int(discrete_column_id[0])
         
         # Retrieve the probability distribution for the chosen discrete column.
-        # 'probs' should ideally be a 2D array with shape (batch_size, num_categories)
         probs = self._discrete_column_category_prob[discrete_column_id]
         
         # If probs is one-dimensional (only one row), replicate it to match the current batch size.
@@ -113,9 +112,9 @@ class DataSampler(object):
                 candidate = (probs.cumsum(axis=1) > r).argmax(axis=1)
                 candidate_list.append(candidate)
 
-                # "Observed treatment": Count how many times each category is chosen in this candidate.
+                # Observed treatment: Count how many times each category is chosen in this candidate.
                 observed_treatment = np.bincount(candidate, minlength=num_categories)
-                # "Ideal treatment": A fair (uniform) distribution would assign each category exactly batch_size_actual/num_categories times.
+                # Ideal treatment: Define the ideal (uniform) distribution: each category should appear equally.
                 ideal_treatment = np.full(num_categories, batch_size_actual / num_categories)
                 # Compute the disparity as the sum of absolute differences between observed and ideal counts.
                 disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
@@ -123,11 +122,11 @@ class DataSampler(object):
 
             # Convert the list of fairness values into a numpy array.
             fairness_values = np.array(fairness_values)
-            # Find the indices of candidate(s) that have the smallest disparity (i.e., the fairest candidates).
+            # Find the indices of candidate(s) that have the smallest disparity.
             candidate_indices = np.where(fairness_values == fairness_values.min())[0]
             # If multiple candidates tie, choose the first one.
             best_candidate_index = candidate_indices[0]
-            # Return the candidate selection (an array of category indices) corresponding to the best candidate.
+            # Return the candidate selection corresponding to the best candidate.
             return candidate_list[best_candidate_index]
 
 
