@@ -80,7 +80,7 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _random_choice_prob_index(self, discrete_column_id, batch_size):
-        # If discrete_column_id is a 1D numpy array, convert it to a scalar by taking the first element.
+        # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
         
@@ -103,8 +103,8 @@ class DataSampler(object):
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
         else:
             # For protected attributes, we generate several candidate selections and choose the fairest one.
-            candidate_list = []      # To store each candidate's selection (an array of indices for the batch)
-            fairness_values = []     # To store the fairness score (disparity) for each candidate
+            candidate_list = []
+            fairness_values = []
 
             # Loop to generate a number of candidate solutions (the number is set in self.candidates).
             for i in range(self.candidates):
