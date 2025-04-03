@@ -158,7 +158,7 @@ class DataSampler(object):
         mask = np.zeros((batch, self._n_discrete_columns), dtype='float32')
         mask[np.arange(batch), discrete_column_id] = 1
         
-        category_id_in_col = self._random_choice_prob_index(discrete_column_id)
+        category_id_in_col = self._random_choice_prob_index(discrete_column_id, batch)
         category_id = self._discrete_column_cond_st[discrete_column_id] + category_id_in_col
         cond[np.arange(batch), category_id] = 1
 
