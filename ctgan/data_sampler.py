@@ -77,9 +77,18 @@ class DataSampler(object):
                 st = ed
             else:
                 st += sum([span_info.dim for span_info in column_info])
+                
+    def _random_choice_prob_index(self, discrete_column_id):
+        probs = self._discrete_column_category_prob[discrete_column_id]
+        r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
+        return (probs.cumsum(axis=1) > r).argmax(axis=1)
 
     # Uniform selection to Fair selection (DS)
-    def _random_choice_prob_index(self, discrete_column_id, batch_size):
+    def _fair_choice_prob_index(self, discrete_column_id, batch_size):
+        # Force the discrete column ID to be uniform
+        if not np.all(discrete_column_id == discrete_column_id[0]):
+            discrete_column_id = np.full(batch_size, discrete_column_id[0])
+        
         # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
@@ -122,7 +131,7 @@ class DataSampler(object):
 
             # Convert the list of fairness values into a numpy array.
             fairness_values = np.array(fairness_values)
-            # Find the indices of candidate(s) that have the smallest disparity.
+            # Find the indices of candidate(s) that have the smallest disparity (i.e., the fairest candidates).
             candidate_indices = np.where(fairness_values == fairness_values.min())[0]
             # If multiple candidates tie, choose the first one.
             best_candidate_index = candidate_indices[0]
@@ -148,16 +157,12 @@ class DataSampler(object):
             return None
 
         discrete_column_id = np.random.choice(np.arange(self._n_discrete_columns), batch)
-        
-        # Force the discrete column ID to be uniform
-        if not np.all(discrete_column_id == discrete_column_id[0]):
-            discrete_column_id = np.full(batch, discrete_column_id[0])
 
         cond = np.zeros((batch, self._n_categories), dtype='float32')
         mask = np.zeros((batch, self._n_discrete_columns), dtype='float32')
         mask[np.arange(batch), discrete_column_id] = 1
         
-        category_id_in_col = self._random_choice_prob_index(discrete_column_id, batch)
+        category_id_in_col = self._fair_choice_prob_index(discrete_column_id, batch)
         category_id = self._discrete_column_cond_st[discrete_column_id] + category_id_in_col
         cond[np.arange(batch), category_id] = 1
 
