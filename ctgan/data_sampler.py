@@ -85,10 +85,6 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _fair_choice_prob_index(self, discrete_column_id, batch_size):
-        # Force the discrete column ID to be uniform
-        if not np.all(discrete_column_id == discrete_column_id[0]):
-            discrete_column_id = np.full(batch_size, discrete_column_id[0])
-        
         # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
@@ -157,6 +153,10 @@ class DataSampler(object):
             return None
 
         discrete_column_id = np.random.choice(np.arange(self._n_discrete_columns), batch)
+        
+        # Force the discrete column ID to be uniform
+        if not np.all(discrete_column_id == discrete_column_id[0]):
+            discrete_column_id = np.full(batch, discrete_column_id[0])
 
         cond = np.zeros((batch, self._n_categories), dtype='float32')
         mask = np.zeros((batch, self._n_discrete_columns), dtype='float32')
