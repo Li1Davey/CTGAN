@@ -166,11 +166,15 @@ class DataSampler(object):
         # Decide which sampling method to use (DS)
         if (self.protected_columns is None) or (len(self.protected_columns) == 0):
             # Standard uniform sampling (as defined in _random_choice_prob_index).
-            print("Uniform Sampling")
+            if not hasattr(self, "_printed_sampling_type"):
+                print("Uniform Sampling")
+                self._printed_sampling_type = True
             category_id_in_col = self._random_choice_prob_index(discrete_column_id)
         else:
             # Fairness-aware sampling for protected attributes.
-            print("Fairness-aware Sampling")
+            if not hasattr(self, "_printed_sampling_type"):
+                print("Fairness-aware Sampling, # of candidates: ", self.candidates)
+                self._printed_sampling_type = True
             category_id_in_col = self._fair_choice_prob_index(discrete_column_id, batch)
         
         category_id = self._discrete_column_cond_st[discrete_column_id] + category_id_in_col
