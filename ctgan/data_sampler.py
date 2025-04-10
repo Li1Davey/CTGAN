@@ -85,7 +85,7 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _fair_choice_prob_index(self, discrete_column_id, batch_size):
-        print("Fair choice batch size: ", batch_size)
+        print("Batch size: ", batch_size)
         # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
@@ -163,7 +163,16 @@ class DataSampler(object):
         mask = np.zeros((batch, self._n_discrete_columns), dtype='float32')
         mask[np.arange(batch), discrete_column_id] = 1
         
-        category_id_in_col = self._fair_choice_prob_index(discrete_column_id, batch)
+        # Decide which sampling method to use (DS)
+        if (self.protected_columns is None) or (len(self.protected_columns) == 0):
+            # Standard uniform sampling (as defined in _random_choice_prob_index).
+            print("Uniform Sampling")
+            category_id_in_col = self._random_choice_prob_index(discrete_column_id)
+        else:
+            # Fairness-aware sampling for protected attributes.
+            print("Fairness-aware Sampling")
+            category_id_in_col = self._fair_choice_prob_index(discrete_column_id, batch)
+        
         category_id = self._discrete_column_cond_st[discrete_column_id] + category_id_in_col
         cond[np.arange(batch), category_id] = 1
 

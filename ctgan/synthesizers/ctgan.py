@@ -338,6 +338,18 @@ class CTGAN(BaseSynthesizer):
         """
         self._validate_discrete_columns(train_data, discrete_columns)
         self._validate_null_data(train_data, discrete_columns)
+        
+        # Convert discrete_columns to list if not already so (DS)
+        if isinstance(discrete_columns, (list, tuple)) is False:
+            discrete_columns = list(discrete_columns)
+        
+        # Map protected attribute names to indices in the discrete_columns list (DS)
+        protected_indices = set()
+        if self._protected_attributes is not None:
+            for attr in self._protected_attributes:
+                if attr in discrete_columns:
+                    idx = discrete_columns.index(attr)
+                    protected_indices.add(idx)
 
         if epochs is None:
             epochs = self._epochs
