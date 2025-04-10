@@ -85,6 +85,7 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _fair_choice_prob_index(self, discrete_column_id, batch_size):
+        print("Fair choice batch size: ", batch_size)
         # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
