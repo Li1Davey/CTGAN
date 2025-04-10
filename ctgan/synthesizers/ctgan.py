@@ -161,7 +161,9 @@ class CTGAN(BaseSynthesizer):
         pac=10,
         cuda=True,
         # New parameter for protected attributes (DS)
-        protected_attributes=None
+        protected_attributes=None,
+        # New parameter for candidates (DS)
+        candidates=5
     ):
         assert batch_size % 2 == 0
 
@@ -182,6 +184,8 @@ class CTGAN(BaseSynthesizer):
         self.pac = pac
         # Store protected attributes (DS)
         self._protected_attributes = protected_attributes
+        # Store canidates attribute (DS)
+        self._candidates = candidates
 
         if not cuda or not torch.cuda.is_available():
             device = 'cpu'
@@ -363,7 +367,7 @@ class CTGAN(BaseSynthesizer):
 
         self._data_sampler = DataSampler(
             # Pass protected columns to DataSampler (DS)
-            train_data, self._transformer.output_info_list, self._log_frequency, protected_columns=protected_columns
+            train_data, self._transformer.output_info_list, self._log_frequency, protected_columns=protected_columns, candidates=self._candidates
         )
 
         data_dim = self._transformer.output_dimensions
