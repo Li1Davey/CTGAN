@@ -515,6 +515,11 @@ class CTGAN(BaseSynthesizer):
                 epoch_iterator.set_description(
                     description.format(gen=generator_loss, dis=discriminator_loss)
                 )
+            # Print the fairness usage (DS)
+            if (i + 1) % 100 == 0:
+                print("Epoch {}: Fairness-aware branch was used {} times".format(i + 1, self._data_sampler.fair_branch_counter))
+        # Print total usage of fairness branch (DS)
+        print("Total fairness-aware branch was used {} times".format(self._data_sampler.fair_branch_counter))
 
     @random_state
     def sample(self, n, condition_column=None, condition_value=None):

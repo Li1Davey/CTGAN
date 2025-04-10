@@ -13,6 +13,8 @@ class DataSampler(object):
         # New attribute to store the number of candidate solutions to generate for fair sampling (DS)
         # Default of 5 is the same as in the fairdo package (DS)
         self.candidates = candidates
+        # Add counter attribute for tracking fairness branch visits (DS)
+        self.fair_branch_counter = 0
 
         def is_discrete_column(column_info):
             return len(column_info) == 1 and column_info[0].activation_fn == 'softmax'
@@ -101,11 +103,15 @@ class DataSampler(object):
         batch_size_actual, num_categories = probs.shape
 
         # If the discrete column is not marked as protected, use the standard cumulative-sum sampling.
-        if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
+        if (self.protected_columns is None) or (len(self.protected_columns) == 0) or (discrete_column_id not in self.protected_columns):
             # For each sample, generate a random number and select the category where the cumulative probability exceeds it.
             r = np.expand_dims(np.random.rand(batch_size_actual), axis=1)
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
         else:
+            
+            # Icrement the fairness counter to see how many times fairness is incremented
+            self.fair_branch_counter += 1
+            
             # For protected attributes, we generate several candidate selections and choose the fairest one.
             candidate_list = []
             fairness_values = []
@@ -163,7 +169,7 @@ class DataSampler(object):
         mask[np.arange(batch), discrete_column_id] = 1
         
         # Decide which sampling method to use (DS)
-        if (self.protected_columns is None) or (len(self.protected_columns) == 0):
+        if (self.protected_columns is None) or (len(self.protected_columns) == 0) or (discrete_column_id not in self.protected_columns):
             # Standard uniform sampling (as defined in _random_choice_prob_index).
             if not hasattr(self, "_printed_sampling_type"):
                 print("Uniform Sampling")
