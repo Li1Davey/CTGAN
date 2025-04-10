@@ -103,7 +103,7 @@ class DataSampler(object):
         batch_size_actual, num_categories = probs.shape
 
         # If the discrete column is not marked as protected, use the standard cumulative-sum sampling.
-        if (self.protected_columns is None) or (len(self.protected_columns) == 0) or (discrete_column_id not in self.protected_columns):
+        if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
             # For each sample, generate a random number and select the category where the cumulative probability exceeds it.
             r = np.expand_dims(np.random.rand(batch_size_actual), axis=1)
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
@@ -169,7 +169,7 @@ class DataSampler(object):
         mask[np.arange(batch), discrete_column_id] = 1
         
         # Decide which sampling method to use (DS)
-        if (self.protected_columns is None) or (len(self.protected_columns) == 0) or (discrete_column_id not in self.protected_columns):
+        if (self.protected_columns is None) or (len(self.protected_columns) == 0):
             # Standard uniform sampling (as defined in _random_choice_prob_index).
             if not hasattr(self, "_printed_sampling_type"):
                 print("Uniform Sampling")
