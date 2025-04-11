@@ -13,7 +13,8 @@ class DataSampler(object):
         # New attribute to store the number of candidate solutions to generate for fair sampling (DS)
         # Default of 5 is the same as in the fairdo package (DS)
         self.candidates = candidates
-        # Add counter attribute for tracking fairness branch visits (DS)
+        # Add counter attributes for tracking uniform and fairness branch visits (DS)
+        self.uniform_branch_counter = 0
         self.fair_branch_counter = 0
 
         def is_discrete_column(column_info):
@@ -81,6 +82,7 @@ class DataSampler(object):
                 st += sum([span_info.dim for span_info in column_info])
                 
     def _random_choice_prob_index(self, discrete_column_id):
+        self.uniform_branch_counter += 1
         probs = self._discrete_column_category_prob[discrete_column_id]
         r = np.expand_dims(np.random.rand(probs.shape[0]), axis=1)
         return (probs.cumsum(axis=1) > r).argmax(axis=1)
@@ -104,6 +106,7 @@ class DataSampler(object):
 
         # If the discrete column is not marked as protected, use the standard cumulative-sum sampling.
         if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
+            self.uniform_branch_counter += 1
             # For each sample, generate a random number and select the category where the cumulative probability exceeds it.
             r = np.expand_dims(np.random.rand(batch_size_actual), axis=1)
             return (probs.cumsum(axis=1) > r).argmax(axis=1)
