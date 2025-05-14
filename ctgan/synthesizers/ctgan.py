@@ -517,7 +517,7 @@ class CTGAN(BaseSynthesizer):
                 )
             # Print the uniform and fairness usage (DS)
             if (i + 1) % 100 == 0:
-                print("Epoch {}: \nUniform branch was used {} times\nFairness-aware branch was used {} times".format(i + 1, self._data_sampler.uniform_branch_counter, self._data_sampler.fair_branch_counter,))
+                print("Epoch {}: \nUniform branch was used {} times\nFairness-aware branch was used {} times".format(i + 1, self._data_sampler.uniform_branch_counter, self._data_sampler.fair_branch_counter))
         # Print total usage of uniform fairness branch (DS)
         print("Total uniform branch was used {} times\nTotal fairness-aware branch was used {} times".format(self._data_sampler.uniform_branch_counter, self._data_sampler.fair_branch_counter))
 
