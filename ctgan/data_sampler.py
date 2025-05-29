@@ -129,9 +129,9 @@ class DataSampler(object):
                 # Observed treatment: Count how many times each category is chosen in this candidate.
                 observed_treatment = np.bincount(candidate, minlength=num_categories)
                 # Ideal treatment: Define the ideal (uniform) distribution: each category should appear equally.
-                ideal_treatment = np.full(num_categories, batch_size_actual)
+                ideal_treatment = np.full(num_categories, batch_size_actual / num_categories)
                 # Compute the disparity as the sum of absolute differences between observed and ideal counts.
-                disparity = np.sum(np.abs(observed_treatment[:num_categories] - ideal_treatment[:num_categories]))
+                disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
                 fairness_values.append(disparity)
 
 
