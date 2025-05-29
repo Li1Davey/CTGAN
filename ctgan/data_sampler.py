@@ -137,6 +137,7 @@ class DataSampler(object):
 
                 # Print candidate and its disparity
                 print(f"Candidate {i + 1}:")
+                print(f"Candidate: {candidate.tolist()}")
                 print(f"Observed Treatment: {observed_treatment}")
                 print(f"Disparity Score: {disparity:.2f}")
                 print("-" * 40)
