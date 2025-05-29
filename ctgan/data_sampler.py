@@ -89,20 +89,19 @@ class DataSampler(object):
 
     # Uniform selection to Fair selection (DS)
     def _fair_choice_prob_index(self, discrete_column_id, batch_size):
-        # If discrete_column_id is a 1D numpy array, it is converted to a scalar by taking the first element.
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
-        
-        # Retrieve the probability distribution for the chosen discrete column.
-        probs = self._discrete_column_category_prob[discrete_column_id]
-        
-        # If probs is one-dimensional (only one row), replicate it to match the current batch size.
+
+        # Correctly retrieve number of categories for this discrete column
+        num_categories = self._discrete_column_n_category[discrete_column_id]
+
+        # Slice probabilities to the actual number of categories
+        probs = self._discrete_column_category_prob[discrete_column_id][:num_categories]
+
         if probs.ndim == 1:
-            # np.tile replicates the array 'batch_size' times along the first dimension
             probs = np.tile(probs, (batch_size, 1))
-        
-        # Now get the actual shape of the probability array.
-        batch_size_actual, num_categories = probs.shape
+
+        batch_size_actual = probs.shape[0]
         
         # If the discrete column is not marked as protected, use the standard cumulative-sum sampling.
         if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
