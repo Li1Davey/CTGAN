@@ -103,7 +103,7 @@ class DataSampler(object):
         
         # Now get the actual shape of the probability array.
         batch_size_actual, num_categories = probs.shape
-
+        
         # If the discrete column is not marked as protected, use the standard cumulative-sum sampling.
         if (self.protected_columns is None) or (discrete_column_id not in self.protected_columns):
             self.uniform_branch_counter += 1
@@ -129,9 +129,9 @@ class DataSampler(object):
                 # Observed treatment: Count how many times each category is chosen in this candidate.
                 observed_treatment = np.bincount(candidate, minlength=num_categories)
                 # Ideal treatment: Define the ideal (uniform) distribution: each category should appear equally.
-                ideal_treatment = np.full(num_categories, batch_size_actual / num_categories)
+                ideal_treatment = np.full(num_categories, batch_size_actual)
                 # Compute the disparity as the sum of absolute differences between observed and ideal counts.
-                disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
+                disparity = np.sum(np.abs(observed_treatment[:num_categories] - ideal_treatment[:num_categories]))
                 fairness_values.append(disparity)
 
 
