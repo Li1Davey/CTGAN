@@ -134,6 +134,12 @@ class DataSampler(object):
                 disparity = np.sum(np.abs(observed_treatment - ideal_treatment))
                 fairness_values.append(disparity)
 
+
+                # Print candidate and its disparity
+                print(f"Candidate {i + 1}:")
+                print(f"Observed Treatment: {observed_treatment}")
+                print(f"Disparity Score: {disparity:.2f}")
+                print("-" * 40)
             # Convert the list of fairness values into a numpy array.
             fairness_values = np.array(fairness_values)
             # Find the indices of candidate(s) that have the smallest disparity (i.e., the fairest candidates).
