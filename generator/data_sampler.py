@@ -92,7 +92,7 @@ class DataSampler(object):
         if isinstance(discrete_column_id, np.ndarray) and discrete_column_id.ndim == 1:
             discrete_column_id = int(discrete_column_id[0])
 
-        # Correctly retrieve number of categories for this discrete column
+        # Correctly retrieve number of categories for the discrete column
         num_categories = self._discrete_column_n_category[discrete_column_id]
 
         # Slice probabilities to the actual number of categories
