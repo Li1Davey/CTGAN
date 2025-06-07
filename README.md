@@ -1,3 +1,5 @@
+> **Disclaimer**: This repository is a modified fork of [CTGAN](https://github.com/sdv-dev/CTGAN), originally developed by the [Synthetic Data Vault Project](https://sdv.dev). This version includes adaptations for fairness-aware data generation as part of the CondFairGen project.
+
 <div align="center">
 <br/>
 <p align="center">
